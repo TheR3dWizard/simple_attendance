@@ -198,8 +198,13 @@ class RollCall extends StatelessWidget {
       ),
       onDismissed: (direction) {
         if (direction == DismissDirection.startToEnd) {
+          HapticFeedback.heavyImpact();
           onPresent(roll);
         } else if (direction == DismissDirection.endToStart) {
+          HapticFeedback.heavyImpact();
+          Future.delayed(Duration(milliseconds: 100), () {
+            HapticFeedback.heavyImpact();
+          });
           onAbsent(roll);
         }
       },
