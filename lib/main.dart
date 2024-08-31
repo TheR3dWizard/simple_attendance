@@ -7,11 +7,17 @@ void main() {
   ));
 }
 
-class MainApp extends StatelessWidget {
+class MainApp extends StatefulWidget {
   MainApp({super.key});
 
+  @override
+  _MainAppState createState() => _MainAppState();
+}
+
+class _MainAppState extends State<MainApp> {
   List<String> present = [];
   List<String> absent = [];
+  List<String> dismissedRolls = [];
 
   final List<String> rollList = [
     '22z201',
@@ -102,11 +108,30 @@ class MainApp extends StatelessWidget {
   ];
 
   void markPresent(String roll) {
-    present.add(roll);
+    setState(() {
+      present.add(roll);
+      dismissedRolls.add(roll);
+      rollList.remove(roll);
+    });
   }
 
   void markAbsent(String roll) {
-    absent.add(roll);
+    setState(() {
+      absent.add(roll);
+      dismissedRolls.add(roll);
+      rollList.remove(roll);
+    });
+  }
+
+  void undoLastAction() {
+    if (dismissedRolls.isNotEmpty) {
+      setState(() {
+        String lastRoll = dismissedRolls.removeLast();
+        present.remove(lastRoll);
+        absent.remove(lastRoll);
+        rollList.insert(0, lastRoll);
+      });
+    }
   }
 
   AlertDialog showList(BuildContext context) {
@@ -120,6 +145,7 @@ class MainApp extends StatelessWidget {
         TextButton(
             onPressed: () {
               Clipboard.setData(ClipboardData(text: exportText));
+              Navigator.of(context).pop();
             },
             child: const Text("Export")),
         TextButton(
@@ -134,27 +160,38 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            showDialog(
-              context: context,
-              builder: (BuildContext context) {
-                return showList(context);
-              },
-            );
-          },
-          child: const Icon(Icons.save),
+    return Scaffold(
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return showList(context);
+                },
+              );
+            },
+            child: const Icon(Icons.save),
+          ),
+          const SizedBox(height: 10),
+          FloatingActionButton(
+            onPressed: undoLastAction,
+            child: const Icon(Icons.undo),
+          ),
+        ],
+      ),
+      body: Stack(
+        alignment: Alignment.center,
+        children: List.generate(
+          rollList.length,
+          (index) => RollCall(
+            roll: rollList[rollList.length - index - 1],
+            onPresent: markPresent,
+            onAbsent: markAbsent,
+          ),
         ),
-        body: Stack(
-            alignment: Alignment.center,
-            children: List.generate(
-                rollList.length,
-                (index) => RollCall(
-                    roll: rollList[rollList.length - index - 1],
-                    onPresent: markPresent,
-                    onAbsent: markAbsent))),
       ),
     );
   }
@@ -176,7 +213,7 @@ class RollCall extends StatelessWidget {
     return Dismissible(
       key: Key(roll),
       background: Container(
-        color: Colors.blue, // First background color
+        color: Colors.green, // First background color
         child: Center(
           child: Text(
             roll,
@@ -203,8 +240,13 @@ class RollCall extends StatelessWidget {
       ),
       onDismissed: (direction) {
         if (direction == DismissDirection.startToEnd) {
+          HapticFeedback.heavyImpact();
           onPresent(roll);
         } else if (direction == DismissDirection.endToStart) {
+          HapticFeedback.heavyImpact();
+          Future.delayed(Duration(milliseconds: 100), () {
+            HapticFeedback.heavyImpact();
+          });
           onAbsent(roll);
         }
       },
