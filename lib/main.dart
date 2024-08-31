@@ -19,6 +19,7 @@ class _MainAppState extends State<MainApp> {
   List<String> absent = [];
   List<String> dismissedRolls = [];
 
+  //change the roll numbers as per your requirement
   final List<String> rollList = [
     '22z201',
     '22Z202',
@@ -211,6 +212,8 @@ class RollCall extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dismissible(
+      movementDuration: const Duration(microseconds: 10),
+      resizeDuration: const Duration(milliseconds: 10),
       key: Key(roll),
       background: Container(
         color: Colors.green, // First background color
