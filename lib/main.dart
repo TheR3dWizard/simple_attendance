@@ -171,7 +171,7 @@ class RollCall extends StatelessWidget {
     return Dismissible(
       key: Key(roll),
       background: Container(
-        color: Colors.blue, // First background color
+        color: Colors.green, // First background color
         child: Center(
           child: Text(
             roll,
